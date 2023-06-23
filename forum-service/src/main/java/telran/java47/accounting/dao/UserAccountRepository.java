@@ -1,5 +1,6 @@
 package telran.java47.accounting.dao;
 
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import telran.java47.accounting.model.UserAccount;

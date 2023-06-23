@@ -13,7 +13,7 @@ import telran.java47.post.dto.DatePeriodDto;
 import telran.java47.post.dto.NewCommentDto;
 import telran.java47.post.dto.NewPostDto;
 import telran.java47.post.dto.PostDto;
-import telran.java47.post.dto.exceptions.PostNotFoundException;
+import telran.java47.exceptions.PostNotFoundException;
 import telran.java47.post.model.Comment;
 import telran.java47.post.model.Post;
 

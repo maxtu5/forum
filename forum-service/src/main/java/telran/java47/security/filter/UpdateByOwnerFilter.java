@@ -1,4 +1,4 @@
-package telran.java47.security;
+package telran.java47.security.filter;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletResponse;
@@ -16,8 +17,15 @@ import javax.servlet.http.HttpServletRequest;
 
 @Component
 @Order(30)
-public class UpdateUserByOwnerFilter implements Filter {
+public class UpdateByOwnerFilter implements Filter {
 
+	@Value("${endpoints.useraccount.changepass.regex}")
+	private String changePassword;
+	@Value("${endpoints.posts.adddeleteupdate.regex}")
+	private String addPost;
+	@Value("${endpoints.posts.addcomment.regex}")
+	private String addComment;
+	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
@@ -34,11 +42,12 @@ public class UpdateUserByOwnerFilter implements Filter {
 			}
 		}
 		chain.doFilter(request, response);
-
 	}
 
 	private boolean checkEndPoint(String method, String path) {
-		return "PUT".equalsIgnoreCase(method) && path.matches("/account/user/\\w+/?");
+		return "PUT".equalsIgnoreCase(method) && path.matches(changePassword)
+				|| "POST".equalsIgnoreCase(method) && path.matches(addPost)
+				|| "PUT".equalsIgnoreCase(method) && path.matches(addComment);
 	}
 
 }

@@ -1,7 +1,6 @@
-package telran.java47.security;
+package telran.java47.security.filter;
 
 import java.io.IOException;
-import java.security.Principal;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -11,24 +10,26 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import telran.java47.accounting.dao.UserAccountRepository;
-import telran.java47.accounting.model.UserAccount;
-import telran.java47.exceptions.PostNotFoundException;
 import telran.java47.post.dao.PostRepository;
 import telran.java47.post.model.Post;
+import telran.java47.security.model.Role;
+import telran.java47.security.model.User;
 
 @Component
 @RequiredArgsConstructor
-@Order(70)
-public class DeletePostByOwnerOrModeratorFilter implements Filter {
+@Order(50)
+public class DeletePostFilter implements Filter {
 	
-	final UserAccountRepository userAccountRepository;
 	final PostRepository postRepository;
-
+	
+	@Value("${endpoints.post.delete.regex}")
+	private String postDeleteRegex;
+	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
@@ -36,14 +37,12 @@ public class DeletePostByOwnerOrModeratorFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) resp;
 		String path = request.getServletPath();
 		if (checkEndPoint(request.getMethod(), path)) {
-			Principal principal = request.getUserPrincipal();
-			UserAccount userAccount = userAccountRepository.findById(principal.getName()).get();
+			User user = (User) request.getUserPrincipal();
 			String[] arr = path.split("/");
 			String postId = arr[arr.length - 1];
-			Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException());
-			if (!(principal.getName().equalsIgnoreCase(post.getAuthor()) 
-					|| userAccount.getRoles().contains("Administrator".toUpperCase())
-					|| userAccount.getRoles().contains("Moderator".toUpperCase()))) {
+			Post post = postRepository.findById(postId).orElse(null);
+			if(post == null || !(user.getName().equals(post.getAuthor())
+					|| user.getRoles().contains(Role.MODERATOR))) {
 				response.sendError(403);
 				return;
 			}
@@ -53,7 +52,7 @@ public class DeletePostByOwnerOrModeratorFilter implements Filter {
 	}
 
 	private boolean checkEndPoint(String method, String path) {
-		return "DELETE".equalsIgnoreCase(method) && path.matches("/forum/post/\\w+/?");
+		return "DELETE".equalsIgnoreCase(method) && path.matches(postDeleteRegex);
 	}
 
 }
