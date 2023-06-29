@@ -1,5 +1,7 @@
 package telran.java47.accounting.model;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,6 +18,8 @@ public class UserAccount {
 	String login;
 	@Setter
 	String password;
+	@Setter
+	LocalDate passDate;
 	@Setter
 	String firstName;
 	@Setter
@@ -41,5 +45,9 @@ public class UserAccount {
 	public boolean removeRole(String role) {
 		return roles.remove(role);
 	}
+	
+	public boolean passExpired() {
+		return passDate == null ? true : LocalDate.now().isAfter(passDate.plus(30, ChronoUnit.DAYS));
+ 	}
 
 }

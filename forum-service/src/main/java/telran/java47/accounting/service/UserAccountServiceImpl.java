@@ -1,8 +1,10 @@
 package telran.java47.accounting.service;
 
 import java.util.Set;
+import java.time.LocalDate;
 import java.util.HashSet;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import telran.java47.accounting.dto.UserRegisterDto;
 import telran.java47.accounting.dto.exceptions.UserExistsException;
 import telran.java47.accounting.dto.exceptions.UserNotFoundException;
 import telran.java47.accounting.model.UserAccount;
+import org.mindrot.jbcrypt.BCrypt;
 
 
 @Service
@@ -22,6 +25,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 	
 	final UserAccountRepository userAccountRepository;
 	final ModelMapper modelMapper;
+	final PasswordEncoder passwordEncoder;
 
 	@Override
 	public UserDto register(UserRegisterDto userRegisterDto) {
@@ -30,6 +34,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 		}
 		UserAccount userAccount = modelMapper.map(userRegisterDto, UserAccount.class);
 		userAccount.addRole("USER");
+		userAccount.setPassword(passwordEncoder.encode(userAccount.getPassword()));
+		userAccount.setPassDate(LocalDate.now());
 		userAccountRepository.save(userAccount);
 		return modelMapper.map(userAccount, UserDto.class);
 	}
@@ -79,8 +85,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 	@Override
 	public void changePassword(String login, String newPassword) {
-		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
-		userAccount.setPassword(newPassword);
+		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(() -> new UserNotFoundException());
+		String password = passwordEncoder.encode(newPassword);
+		userAccount.setPassword(password);
+		userAccount.setPassDate(LocalDate.now());
 		userAccountRepository.save(userAccount);
 	}
 
